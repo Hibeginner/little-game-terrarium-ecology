@@ -8,7 +8,7 @@ function generatePrompt(state, actions) {
   const seasonCnMap = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
   const seasonCn = seasonCnMap[state.season] || state.season;
 
-  return `你是一个微型生态瓶模拟器。请根据规则推演下一天状态并以JSON输出。
+  return `你是一个生态瓶模拟器（游戏"瓶中四季"）。请根据规则推演下一天状态并以JSON输出。
 ## 规则
 ${rules}
 

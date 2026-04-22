@@ -61,7 +61,7 @@ function handleDayResult(data) {
   log('UI', `Updating UI for day ${data.day}`);
 
   // Update header
-  document.getElementById('title-day').textContent = `🌿 微型生态瓶 Day ${data.day}/20`;
+  document.getElementById('title-day').textContent = `🌿 瓶中四季 Day ${data.day}/16`;
   const seasonLabel = SEASON_LABEL[data.season] || data.season;
   const env = data.environment || data.state?.environment;
   if (env) {
@@ -248,7 +248,7 @@ function showGameOver(data) {
   overlay.className = 'game-over-overlay';
   overlay.innerHTML = `
     <div class="game-over-card">
-      <div class="go-title">🌿 你的生态瓶故事 🌿</div>
+      <div class="go-title">🌿 瓶中四季 · 终章 🌿</div>
 
       <div class="go-rating-wrap">
         <div class="go-rating-badge rating-${rating}">${rating}</div>
@@ -360,7 +360,7 @@ window.debugGameOver = function(ratingHint) {
   const visibleEntities = fakeEntities.slice(0, score.diversity + 2);
 
   showGameOver({
-    day: 20,
+    day: 16,
     season: 'winter',
     entities: visibleEntities,
     score: score,

@@ -59,7 +59,7 @@ function startServer(port = 30001, mockLLM = false) {
           gameState.update(fixedState);
           log('STATE', `day=${fixedState.day} season=${fixedState.season} entities=${fixedState.entities.length} temp=${fixedState.environment.temperature}℃`);
 
-          if (fixedState.day >= 20) {
+          if (fixedState.day >= 16) {
             const score = calculateScore(fixedState);
             const response = { type: 'game_over', ...fixedState, score };
             ws.send(JSON.stringify(response));
