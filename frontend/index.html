@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>微型生态瓶</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="header">
+    <span id="title-day">🌿 微型生态瓶 Day 1/100</span>
+    <span id="season-temp">🌸春天 🌡️15℃</span>
+    <span id="env-stats">💧5 ☀️5 🌱5</span>
+  </div>
+  
+  <div class="main-container">
+    <div class="canvas-container">
+      <canvas id="terrarium" width="480" height="320"></canvas>
+    </div>
+    <div class="log-container" id="log-panel"></div>
+  </div>
+
+  <div class="controls">
+    <div class="actions-header">今日操作 (剩余 <span id="action-remain">3</span>/3)</div>
+    <div class="materials" id="material-btns"></div>
+    <div class="action-buttons">
+      <button id="btn-pause">⏸ 暂停</button>
+      <button id="btn-confirm" disabled>▶️ 确认</button>
+    </div>
+  </div>
+
+  <script src="constants.js"></script>
+  <script src="canvas.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
