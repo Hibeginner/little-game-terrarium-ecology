@@ -3,6 +3,7 @@ const { GameState } = require('./gameState');
 const { generatePrompt } = require('./prompt');
 const { invokeLLM } = require('./llm');
 const { validateAndFix } = require('./validator');
+const { calculateScore } = require('./scorer');
 
 function startServer(port = 3001, mockLLM = false) {
   const wss = new WebSocket.Server({ port });
@@ -34,7 +35,8 @@ function startServer(port = 3001, mockLLM = false) {
           
           // Check game over
           if (fixedState.day >= 100) {
-            ws.send(JSON.stringify({ type: 'game_over', ...fixedState }));
+            const score = calculateScore(fixedState);
+            ws.send(JSON.stringify({ type: 'game_over', ...fixedState, score }));
           } else {
             ws.send(JSON.stringify({ type: 'day_result', ...fixedState }));
           }
