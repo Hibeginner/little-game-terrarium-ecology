@@ -100,7 +100,7 @@ const CELL_H = 40;
 
 const SEASON_BG = {
   spring: '#E8F5E9',
-  summer: '#FFF8E1',
+  summer: '#FDE8E0',
   autumn: '#FBE9E7',
   winter: '#E3F2FD'
 };

@@ -5,6 +5,7 @@ class TerrariumRenderer {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.drawnItems = [];
+    this.crisis = null;
 
     // Canvas hover tooltip
     this.canvas.addEventListener('mousemove', (e) => {
@@ -24,7 +25,7 @@ class TerrariumRenderer {
         }
       }
 
-      this.canvas.title = found ? (ENTITY_TIPS[found.type] || `${found.emoji}`) : '';
+      this.canvas.title = found ? (found.tip || ENTITY_TIPS[found.type] || `${found.emoji}`) : '';
       this.canvas.style.cursor = found ? 'help' : 'default';
     });
   }
@@ -32,6 +33,10 @@ class TerrariumRenderer {
   setSeason(season) {
     const bg = SEASON_BG[season] || SEASON_BG.spring;
     this.canvas.parentElement.style.background = bg;
+  }
+
+  setCrisis(crisis) {
+    this.crisis = crisis || null;
   }
 
   // 带渐变过渡的渲染：旧画面淡出 → 新画面淡入
@@ -297,6 +302,64 @@ class TerrariumRenderer {
         }
 
         this.drawnItems.push({ x, y, type: item.type, emoji: item.emoji });
+      });
+    }
+
+    // --- 6. 绘制危机事件（画在最上层，瓶子右上角） ---
+    if (this.crisis) {
+      const cx = w - padRight - 10;
+      const cy = padTop + 18;
+
+      // 半透明红色警告背景圆
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(229, 57, 53, 0.18)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(229, 57, 53, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      // 危机 emoji
+      ctx.save();
+      ctx.globalAlpha = 1.0;
+      ctx.font = '26px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#000';
+      ctx.fillText(this.crisis.emoji, cx, cy);
+      ctx.restore();
+
+      // 红色感叹号角标
+      ctx.save();
+      const bx = cx + 14;
+      const by = cy - 14;
+      ctx.beginPath();
+      ctx.arc(bx, by, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#e53935';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('!', bx, by);
+      ctx.restore();
+
+      // 恢复主绘制字体
+      ctx.font = '28px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // tooltip（优先级最高，插入 drawnItems 开头）
+      this.drawnItems.unshift({
+        x: cx, y: cy,
+        type: this.crisis.id,
+        emoji: this.crisis.emoji,
+        tip: `⚠️ ${this.crisis.name}：${this.crisis.description}`
       });
     }
   }

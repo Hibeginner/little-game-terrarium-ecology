@@ -4,6 +4,7 @@ const { generatePrompt } = require('./prompt');
 const { invokeLLM } = require('./llm');
 const { validateAndFix } = require('./validator');
 const { calculateScore } = require('./scorer');
+const { rollCrisis } = require('./crisis');
 
 function log(tag, msg) {
   const ts = new Date().toLocaleTimeString();
@@ -18,6 +19,7 @@ function startServer(port = 30001, mockLLM = false) {
 
   wss.on('connection', (ws) => {
     log('CONN', 'Client connected');
+    let lastCrisisDay = 0;
 
     ws.on('message', async (message) => {
       try {
@@ -27,6 +29,7 @@ function startServer(port = 30001, mockLLM = false) {
         if (msg.type === 'start_game') {
           // Reset state on each new game (page refresh = new game)
           gameState.reset();
+          lastCrisisDay = 0;
           log('STATE', 'Game state reset for new game');
           const state = gameState.get();
           const response = { type: 'day_result', ...state };
@@ -35,8 +38,17 @@ function startServer(port = 30001, mockLLM = false) {
 
         } else if (msg.type === 'player_action') {
           const currentState = gameState.get();
+
+          // Roll for crisis event
+          const crisisResult = rollCrisis(currentState, lastCrisisDay);
+          lastCrisisDay = crisisResult.lastCrisisDay;
+          const crisis = crisisResult.crisis;
+          if (crisis) {
+            log('CRISIS', `${crisis.emoji} ${crisis.name}: ${crisis.description}`);
+          }
+
           log('LLM', `Generating prompt for day ${currentState.day}...`);
-          const promptText = generatePrompt(currentState, msg.actions || []);
+          const promptText = generatePrompt(currentState, msg.actions || [], crisis);
           log('LLM', `Prompt length: ${promptText.length} chars`);
 
           let nextStateRaw;
@@ -56,6 +68,12 @@ function startServer(port = 30001, mockLLM = false) {
           }
 
           const fixedState = validateAndFix(nextStateRaw, currentState);
+
+          // Inject crisis info into the response so frontend can display it
+          if (crisis) {
+            fixedState.crisis = { id: crisis.id, name: crisis.name, emoji: crisis.emoji, description: crisis.description };
+          }
+
           gameState.update(fixedState);
           log('STATE', `day=${fixedState.day} season=${fixedState.season} entities=${fixedState.entities.length} temp=${fixedState.environment.temperature}℃`);
 

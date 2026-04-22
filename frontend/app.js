@@ -71,12 +71,13 @@ function handleDayResult(data) {
 
   // Render canvas
   renderer.setSeason(data.season);
+  renderer.setCrisis(data.crisis || null);
   const entities = data.entities || data.state?.entities || [];
-  log('RENDER', `Drawing ${entities.length} entity types on canvas`);
+  log('RENDER', `Drawing ${entities.length} entity types on canvas` + (data.crisis ? ` [CRISIS: ${data.crisis.name}]` : ''));
   renderer.renderWithTransition(entities);
 
   // Update log panel
-  if (data.log) {
+    if (data.log) {
     let html;
     if (isFirstResult) {
       html = data.log;
@@ -84,6 +85,12 @@ function handleDayResult(data) {
     } else {
       const actionDay = data.day - 1;
       html = `<strong>Day ${actionDay} 生态日志：</strong><br>${data.log}`;
+
+      // Crisis event banner
+      if (data.crisis) {
+        html = `<div class="log-crisis">${data.crisis.emoji} <strong>危机事件：${data.crisis.name}</strong> — ${data.crisis.description}</div>` + html;
+      }
+
       if (data.events && data.events.length > 0) {
         const eventText = data.events.map(ev => ev.description || ev.type).join('<br>');
         html += `<div class="log-events">${eventText}</div>`;
@@ -264,7 +271,7 @@ function showGameOver(data) {
             <div class="go-score-sublabel">${score.diversity} 个物种存活</div>
             <div class="go-score-bar"><div class="go-score-bar-fill bar-diversity" data-width="${(score.diversityScore || 0) / 40 * 100}%"></div></div>
           </div>
-          <div class="go-score-value">${score.diversityScore || 0}<span style="font-size:11px;color:#8d7b5e">/40</span></div>
+          <div class="go-score-value">${score.diversityScore || 0}<span style="font-size:11px;color:#8d7b5e">/40分</span></div>
         </div>
         <div class="go-score-item">
           <div class="go-score-icon">⚖️</div>
@@ -273,7 +280,7 @@ function showGameOver(data) {
             <div class="go-score-sublabel">食物链 + 环境 + 植被覆盖</div>
             <div class="go-score-bar"><div class="go-score-bar-fill bar-balance" data-width="${(score.balance || 0) / 30 * 100}%"></div></div>
           </div>
-          <div class="go-score-value">${score.balance || 0}<span style="font-size:11px;color:#8d7b5e">/30</span></div>
+          <div class="go-score-value">${score.balance || 0}<span style="font-size:11px;color:#8d7b5e">/30分</span></div>
         </div>
         <div class="go-score-item">
           <div class="go-score-icon">🛡️</div>
@@ -282,11 +289,11 @@ function showGameOver(data) {
             <div class="go-score-sublabel">度过严冬的能力</div>
             <div class="go-score-bar"><div class="go-score-bar-fill bar-resilience" data-width="${(score.resilience || 0) / 20 * 100}%"></div></div>
           </div>
-          <div class="go-score-value">${score.resilience || 0}<span style="font-size:11px;color:#8d7b5e">/20</span></div>
+          <div class="go-score-value">${score.resilience || 0}<span style="font-size:11px;color:#8d7b5e">/20分</span></div>
         </div>
       </div>
 
-      <div class="go-total">${score.total}<span style="font-size:16px;font-weight:normal;color:#8d7b5e"> / 100</span></div>
+      <div class="go-total">${score.total}<span style="font-size:16px;font-weight:normal;color:#8d7b5e"> / 100 分</span></div>
       <div class="go-total-label">最终评分</div>
 
       ${survivorsHtml}
