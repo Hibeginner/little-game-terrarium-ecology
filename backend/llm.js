@@ -21,7 +21,7 @@ async function invokeLLM(promptText, mock = false) {
   log('CALL', `Prompt written to ${tempFile} (${promptText.length} chars)`);
 
   return new Promise((resolve, reject) => {
-    const cmd = `type "${tempFile}" | codemaker run -m "netease-codemaker/qwen3.5-plus"`;
+    const cmd = `type "${tempFile}" | codemaker run -m "netease-codemaker/kimi-k2.5"`;
     log('EXEC', cmd);
 
     exec(cmd, { timeout: 120000, maxBuffer: 1024 * 1024, shell: 'cmd.exe' }, (error, stdout, stderr) => {

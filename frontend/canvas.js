@@ -6,6 +6,7 @@ class TerrariumRenderer {
     this.ctx.textBaseline = 'middle';
     this.drawnItems = [];
     this.crisis = null;
+    this.posCache = {}; // key: "type_layer_idx" → cellIndex, 保持未变化实体位置稳定
 
     // Canvas hover tooltip
     this.canvas.addEventListener('mousemove', (e) => {
@@ -252,34 +253,56 @@ class TerrariumRenderer {
       const visualCount = Math.min(count, 3);
       typeCount[e.type] = count;
       for (let i = 0; i < visualCount; i++) {
-        layerMap[layer].push({ emoji: e.emoji, type: e.type, total: count });
+        layerMap[layer].push({ emoji: e.emoji, type: e.type, total: count, _idx: i });
       }
     });
+
+    // 构建新的位置缓存，保留已有实体位置
+    const newPosCache = {};
 
     for (const [layer, rows] of Object.entries(LAYER_ROWS)) {
       const items = layerMap[layer] || [];
       if (items.length === 0) continue;
 
       const totalCells = rows.length * COLS;
+      // 收集本层所有已缓存的 cellIndex，防止新实体分配到已占用位置
       const usedCells = new Set();
 
+      // 第一轮：复用缓存位置
       items.forEach(item => {
+        const cacheKey = `${item.type}_${layer}_${item._idx}`;
+        const cached = this.posCache[cacheKey];
+        if (cached !== undefined && cached < totalCells) {
+          usedCells.add(cached);
+          newPosCache[cacheKey] = cached;
+          item._cell = cached;
+        }
+      });
+
+      // 第二轮：为没有缓存的实体分配新位置
+      items.forEach(item => {
+        if (item._cell !== undefined) return;
+        const cacheKey = `${item.type}_${layer}_${item._idx}`;
         let cellIndex;
         let attempts = 0;
         do {
           cellIndex = Math.floor(Math.random() * totalCells);
           attempts++;
         } while (usedCells.has(cellIndex) && attempts < 20);
-
         usedCells.add(cellIndex);
+        newPosCache[cacheKey] = cellIndex;
+        item._cell = cellIndex;
+      });
 
+      // 绘制
+      items.forEach(item => {
+        const cellIndex = item._cell;
         const rowOffset = Math.floor(cellIndex / COLS);
         const col = cellIndex % COLS;
         const row = rows[0] + rowOffset;
 
-        const jitter = 2;
-        const x = padLeft + col * cellW + cellW / 2 + (Math.random() * jitter * 2 - jitter);
-        const y = padTop + row * cellH + cellH / 2 + (Math.random() * jitter * 2 - jitter);
+        const x = padLeft + col * cellW + cellW / 2;
+        const y = padTop + row * cellH + cellH / 2;
 
         ctx.fillText(item.emoji, x, y);
 
@@ -304,6 +327,9 @@ class TerrariumRenderer {
         this.drawnItems.push({ x, y, type: item.type, emoji: item.emoji });
       });
     }
+
+    // 更新缓存（旧的不在新缓存中的会被自然丢弃）
+    this.posCache = newPosCache;
 
     // --- 6. 绘制危机事件（画在最上层，瓶子右上角） ---
     if (this.crisis) {

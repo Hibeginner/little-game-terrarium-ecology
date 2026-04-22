@@ -5,31 +5,41 @@
 
 const CRISIS_TYPES = [
   {
-    id: 'drought',
-    name: '干旱',
-    emoji: '🏜️',
-    seasons: ['summer'],
-    probability: 0.25,
-    condition: (state) => state.environment.humidity >= 3,
-    description: '连日高温无雨，土地龟裂。humidity -3，所有植物 quantity -30%。',
-    prompt: '⚠️ 危机事件【干旱】：连续高温无降水，湿度骤降3点，所有植物因缺水 quantity 减少30%（向下取整，最少保留0.5）。请在推演中体现干旱对生态的破坏。'
+    id: 'late_frost',
+    name: '倒春寒',
+    emoji: '🌨️',
+    seasons: ['spring'],
+    probability: 0.40,
+    condition: () => true,
+    description: '冷空气突然回流，气温骤降。temperature -6，嫩芽冻伤 quantity -50%，花苞冻落。',
+    prompt: '⚠️ 危机事件【倒春寒】：冷空气突然回流，温度骤降6℃，嫩芽(sprout)被冻伤 quantity 减半（向下取整，最少保留0.5），花苞(flower_bud)冻落。请在推演中体现倒春寒的破坏。'
   },
   {
     id: 'storm',
     name: '暴雨',
     emoji: '🌊',
-    seasons: ['summer', 'autumn'],
-    probability: 0.20,
+    seasons: ['spring', 'summer', 'autumn'],
+    probability: 0.35,
     condition: () => true,
-    description: '瓢泼大雨冲刷瓶壁。humidity +4，地面小型动物(蚂蚁、蚯蚓)被冲走 quantity -50%。',
+    description: '瓢泼大雨冲刷瓶壁。humidity +4，蚂蚁和蚯蚓被冲走 quantity -50%。',
     prompt: '⚠️ 危机事件【暴雨】：倾盆大雨灌入瓶中，湿度暴涨4点，蚂蚁和蚯蚓被水冲走 quantity 减半（向下取整，最少保留0.5）。请在推演中体现暴雨的冲击。'
+  },
+  {
+    id: 'drought',
+    name: '干旱',
+    emoji: '🏜️',
+    seasons: ['summer'],
+    probability: 0.40,
+    condition: (state) => state.environment.humidity >= 3,
+    description: '连日高温无雨，土地龟裂。humidity -3，所有植物 quantity -30%。',
+    prompt: '⚠️ 危机事件【干旱】：连续高温无降水，湿度骤降3点，所有植物因缺水 quantity 减少30%（向下取整，最少保留0.5）。请在推演中体现干旱对生态的破坏。'
   },
   {
     id: 'pest_outbreak',
     name: '虫害',
     emoji: '🦗',
     seasons: ['spring', 'summer'],
-    probability: 0.20,
+    probability: 0.35,
     condition: (state) => {
       const insectTypes = ['mosquito', 'caterpillar', 'ant', 'cricket'];
       const insectQty = state.entities
@@ -44,8 +54,8 @@ const CRISIS_TYPES = [
     id: 'cold_snap',
     name: '寒潮',
     emoji: '🥶',
-    seasons: ['winter'],
-    probability: 0.30,
+    seasons: ['autumn', 'winter'],
+    probability: 0.45,
     condition: () => true,
     description: '极地寒流来袭，气温骤降。temperature -8，不耐寒物种(蚂蚁、蜗牛、蝴蝶、蚊虫)直接死亡。',
     prompt: '⚠️ 危机事件【寒潮】：极寒空气侵入，温度骤降8℃，蚂蚁、蜗牛、蝴蝶、蚊虫因无法耐受严寒全部死亡（quantity 归零移除）。花朵凋零变为 wilted_flower。请在推演中体现寒潮的致命打击。'
@@ -55,9 +65,9 @@ const CRISIS_TYPES = [
     name: '热浪',
     emoji: '🔥',
     seasons: ['summer'],
-    probability: 0.20,
+    probability: 0.35,
     condition: () => true,
-    description: '酷暑难耐，水分蒸发。temperature +8，humidity -2，嫩芽和蘑菇被灼伤 quantity -50%。',
+    description: '酷暑难耐，水分蒸发。temperature +8，humidity -2，嫩芽和蘑菇 quantity -50%。',
     prompt: '⚠️ 危机事件【热浪】：极端高温侵袭，温度飙升8℃，湿度下降2点，嫩芽(sprout)和蘑菇(mushroom)被灼伤 quantity 减半。请在推演中体现高温的破坏。'
   },
   {
@@ -65,7 +75,7 @@ const CRISIS_TYPES = [
     name: '瘟疫',
     emoji: '☠️',
     seasons: ['spring', 'summer', 'autumn', 'winter'],
-    probability: 0.15,
+    probability: 0.25,
     condition: (state) => {
       const animalTypes = ['earthworm', 'ant', 'snail', 'mosquito', 'frog', 'mouse', 'bird',
         'butterfly', 'dragonfly', 'bee', 'cricket', 'spider', 'caterpillar'];
@@ -91,8 +101,8 @@ function rollCrisis(state, lastCrisisDay = 0) {
   // Day 1 never has a crisis (game just started)
   if (day <= 1) return { crisis: null, lastCrisisDay };
 
-  // 2-day cooldown after last crisis
-  if (lastCrisisDay > 0 && day - lastCrisisDay < 3) {
+  // 1-day cooldown after last crisis
+  if (lastCrisisDay > 0 && day - lastCrisisDay < 2) {
     return { crisis: null, lastCrisisDay };
   }
 
