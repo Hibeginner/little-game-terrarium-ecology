@@ -21,10 +21,10 @@ function validateAndFix(newState, oldState) {
   // 3. Remove entities with quantity <= 0
   result.entities = result.entities.filter(e => e.quantity > 0);
 
-  // 4. Correct season based on day
-  if (result.day <= 25) result.season = 'spring';
-  else if (result.day <= 50) result.season = 'summer';
-  else if (result.day <= 75) result.season = 'autumn';
+  // 4. Correct season based on day (5 days per season, 20 days total)
+  if (result.day <= 5) result.season = 'spring';
+  else if (result.day <= 10) result.season = 'summer';
+  else if (result.day <= 15) result.season = 'autumn';
   else result.season = 'winter';
 
   return result;

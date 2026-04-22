@@ -1,8 +1,8 @@
 const WebSocket = require('ws');
 const { startServer } = require('../../backend/server');
 
-const wss = startServer(3002);
-const ws = new WebSocket('ws://localhost:3002');
+const wss = startServer(30002);
+const ws = new WebSocket('ws://localhost:30002');
 
 ws.on('open', () => {
   ws.send(JSON.stringify({ type: 'start_game' }));

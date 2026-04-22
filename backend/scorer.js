@@ -41,10 +41,10 @@ function calculateScore(finalState) {
   
   // 3. Survival resilience (max 20)
   let resilience = 0;
-  if (aliveEntities.length > 0 && finalState.day >= 100) resilience += 10;
-  else if (aliveEntities.length > 0) resilience += Math.round(finalState.day / 10);
+  if (aliveEntities.length > 0 && finalState.day >= 20) resilience += 10;
+  else if (aliveEntities.length > 0) resilience += Math.round(finalState.day / 2);
   // Winter survival bonus
-  if (finalState.day >= 100) {
+  if (finalState.day >= 20) {
     const winterSpecies = new Set(aliveEntities.map(e => e.type)).size;
     if (winterSpecies >= 3) resilience += 10;
     else if (winterSpecies >= 1) resilience += 5;
