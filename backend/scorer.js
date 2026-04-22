@@ -14,7 +14,7 @@ function calculateScore(finalState) {
   let balance = 0;
   
   // 2a. Food chain completeness (max 10)
-  const plantTypes = ['sprout', 'grass', 'herb', 'flower', 'bush', 'mushroom'];
+  const plantTypes = ['sprout', 'grass', 'grass_turf', 'herb', 'flower', 'bush', 'mushroom', 'clover'];
   const herbivoreTypes = ['mouse', 'caterpillar', 'snail'];
   const predatorTypes = ['bird', 'spider', 'frog'];
   const hasPlant = aliveEntities.some(e => plantTypes.includes(e.type));

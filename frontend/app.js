@@ -111,15 +111,31 @@ function handleDayResult(data) {
 // --- Material selection ---
 function initUI() {
   const container = document.getElementById('material-btns');
-  MATERIALS.forEach(mat => {
-    const btn = document.createElement('div');
-    btn.className = 'mat-btn';
-    btn.id = `mat-${mat.id}`;
-    btn.title = mat.tip;
-    btn.innerHTML = `${mat.emoji} ${mat.name}<div class="badge" id="badge-${mat.id}">0</div>`;
-    btn.onclick = () => selectMaterial(mat.id);
-    btn.oncontextmenu = (e) => { e.preventDefault(); removeMaterial(mat.id); };
-    container.appendChild(btn);
+  MATERIAL_GROUPS.forEach(group => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'mat-group';
+
+    const label = document.createElement('div');
+    label.className = 'mat-group-label';
+    label.textContent = group.label;
+    groupDiv.appendChild(label);
+
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'mat-group-items';
+
+    group.items.forEach(mat => {
+      const btn = document.createElement('div');
+      btn.className = 'mat-btn';
+      btn.id = `mat-${mat.id}`;
+      btn.title = mat.tip;
+      btn.innerHTML = `${mat.emoji} ${mat.name}<div class="badge" id="badge-${mat.id}">0</div>`;
+      btn.onclick = () => selectMaterial(mat.id);
+      btn.oncontextmenu = (e) => { e.preventDefault(); removeMaterial(mat.id); };
+      itemsDiv.appendChild(btn);
+    });
+
+    groupDiv.appendChild(itemsDiv);
+    container.appendChild(groupDiv);
   });
 
   document.getElementById('btn-confirm').onclick = confirmActions;
@@ -196,25 +212,99 @@ function confirmActions() {
 function showGameOver(data) {
   document.getElementById('btn-confirm').disabled = true;
 
-  const score = data.score || { total: 0, diversity: 0, balance: 0 };
+  const score = data.score || { total: 0, diversity: 0, diversityScore: 0, balance: 0, resilience: 0 };
 
-  let rating = 'D', title = '生态灾难';
-  if (score.total >= 90) { rating = 'S'; title = '生态大师'; }
-  else if (score.total >= 80) { rating = 'A'; title = '自然守护者'; }
-  else if (score.total >= 60) { rating = 'B'; title = '园艺爱好者'; }
-  else if (score.total >= 40) { rating = 'C'; title = '生态新手'; }
+  // Rating tiers
+  let rating = 'D', title = '生态灾难', subtitle = '瓶中生命未能延续...';
+  if (score.total >= 90) { rating = 'S'; title = '生态大师'; subtitle = '完美的微型世界！生命在这里繁荣昌盛'; }
+  else if (score.total >= 80) { rating = 'A'; title = '自然守护者'; subtitle = '一个充满生机的小世界'; }
+  else if (score.total >= 60) { rating = 'B'; title = '园艺爱好者'; subtitle = '不错的尝试，生态系统基本稳定'; }
+  else if (score.total >= 40) { rating = 'C'; title = '生态新手'; subtitle = '还需要更多实践来维持平衡'; }
+
+  // Collect surviving species
+  const entities = data.entities || data.state?.entities || [];
+  const survivors = entities
+    .filter(e => e.status !== 'dead' && e.quantity > 0 && e.type !== 'soil' && e.type !== 'water')
+    .map(e => ({ emoji: e.emoji, type: e.type, quantity: Math.round(e.quantity) }));
+
+  let survivorsHtml = '';
+  if (survivors.length > 0) {
+    const tags = survivors.map(s =>
+      `<span class="go-survivor-tag"><span class="surv-emoji">${s.emoji}</span>${ENTITY_TIPS[s.type] ? ENTITY_TIPS[s.type].split('：')[0].replace(/^.+\s/, '') : s.type} x${s.quantity}</span>`
+    ).join('');
+    survivorsHtml = `
+      <div class="go-survivors">
+        <div class="go-survivors-title">存活的生命 (${survivors.length} 种)</div>
+        <div class="go-survivors-list">${tags}</div>
+      </div>`;
+  } else {
+    survivorsHtml = `
+      <div class="go-survivors">
+        <div class="go-survivors-title">没有生命存活下来...</div>
+      </div>`;
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'game-over-overlay';
   overlay.innerHTML = `
     <div class="game-over-card">
-      <h2>🌿 你的生态瓶故事 🌿</h2>
-      <div class="score-row"><span>🌍 生物多样性</span><span>${score.diversity} 种</span></div>
-      <div class="score-row"><span>⚖️ 生态平衡</span><span>${score.balance} 分</span></div>
-      <div class="score-total">总分: ${score.total}/100 — ${rating} ${title}</div>
-      <button class="restart-btn" onclick="location.reload()">🔄 再来一次</button>
+      <div class="go-title">🌿 你的生态瓶故事 🌿</div>
+
+      <div class="go-rating-wrap">
+        <div class="go-rating-badge rating-${rating}">${rating}</div>
+        <div class="go-rating-title">${title}</div>
+        <div class="go-rating-subtitle">${subtitle}</div>
+      </div>
+
+      <div class="go-scores">
+        <div class="go-score-item">
+          <div class="go-score-icon">🌍</div>
+          <div class="go-score-info">
+            <div class="go-score-label">生物多样性</div>
+            <div class="go-score-sublabel">${score.diversity} 个物种存活</div>
+            <div class="go-score-bar"><div class="go-score-bar-fill bar-diversity" data-width="${(score.diversityScore || 0) / 40 * 100}%"></div></div>
+          </div>
+          <div class="go-score-value">${score.diversityScore || 0}<span style="font-size:11px;color:#8d7b5e">/40</span></div>
+        </div>
+        <div class="go-score-item">
+          <div class="go-score-icon">⚖️</div>
+          <div class="go-score-info">
+            <div class="go-score-label">生态平衡</div>
+            <div class="go-score-sublabel">食物链 + 环境 + 植被覆盖</div>
+            <div class="go-score-bar"><div class="go-score-bar-fill bar-balance" data-width="${(score.balance || 0) / 30 * 100}%"></div></div>
+          </div>
+          <div class="go-score-value">${score.balance || 0}<span style="font-size:11px;color:#8d7b5e">/30</span></div>
+        </div>
+        <div class="go-score-item">
+          <div class="go-score-icon">🛡️</div>
+          <div class="go-score-info">
+            <div class="go-score-label">生存韧性</div>
+            <div class="go-score-sublabel">度过严冬的能力</div>
+            <div class="go-score-bar"><div class="go-score-bar-fill bar-resilience" data-width="${(score.resilience || 0) / 20 * 100}%"></div></div>
+          </div>
+          <div class="go-score-value">${score.resilience || 0}<span style="font-size:11px;color:#8d7b5e">/20</span></div>
+        </div>
+      </div>
+
+      <div class="go-total">${score.total}<span style="font-size:16px;font-weight:normal;color:#8d7b5e"> / 100</span></div>
+      <div class="go-total-label">最终评分</div>
+
+      ${survivorsHtml}
+
+      <div class="go-buttons">
+        <button class="restart-btn" onclick="location.reload()">🔄 再来一次</button>
+      </div>
     </div>`;
   document.body.appendChild(overlay);
+
+  // Animate score bars after a short delay (so CSS transition is visible)
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      overlay.querySelectorAll('.go-score-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+    }, 100);
+  });
 }
 
 // --- Init ---
@@ -222,4 +312,61 @@ window.onload = () => {
   log('INIT', 'App starting...');
   initUI();
   initWS();
+
+  // Debug shortcut: Ctrl+Shift+G to preview game-over screen
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+      e.preventDefault();
+      window.debugGameOver();
+    }
+  });
+};
+
+// --- Debug: preview game-over screen ---
+// Usage: open browser console, type debugGameOver() or debugGameOver('S')
+// Rating options: 'S', 'A', 'B', 'C', 'D' — or omit for random
+window.debugGameOver = function(ratingHint) {
+  // Remove existing overlay if any
+  const existing = document.querySelector('.game-over-overlay');
+  if (existing) existing.remove();
+
+  // Generate fake score based on rating hint
+  const presets = {
+    S: { total: 95, diversity: 12, diversityScore: 40, balance: 28, resilience: 20 },
+    A: { total: 82, diversity: 8, diversityScore: 30, balance: 25, resilience: 18 },
+    B: { total: 65, diversity: 5, diversityScore: 20, balance: 18, resilience: 15 },
+    C: { total: 45, diversity: 3, diversityScore: 10, balance: 12, resilience: 10 },
+    D: { total: 18, diversity: 1, diversityScore: 10, balance: 4, resilience: 0 },
+  };
+  const r = ratingHint && presets[ratingHint.toUpperCase()] ? ratingHint.toUpperCase() : 'A';
+  const score = presets[r];
+
+  // Generate fake entities
+  const fakeEntities = [
+    { type: 'soil', emoji: '🟫', quantity: 5, layer: 'underground', status: 'alive' },
+    { type: 'water', emoji: '💧', quantity: 3, layer: 'underground', status: 'alive' },
+    { type: 'grass', emoji: '🌿', quantity: 4, layer: 'surface', status: 'alive' },
+    { type: 'flower', emoji: '🌻', quantity: 2, layer: 'mid', status: 'alive' },
+    { type: 'bush', emoji: '🌳', quantity: 3, layer: 'mid', status: 'alive' },
+    { type: 'mushroom', emoji: '🍄', quantity: 2, layer: 'surface', status: 'alive' },
+    { type: 'earthworm', emoji: '🪱', quantity: 3, layer: 'underground', status: 'alive' },
+    { type: 'snail', emoji: '🐌', quantity: 2, layer: 'surface', status: 'alive' },
+    { type: 'frog', emoji: '🐸', quantity: 1, layer: 'surface', status: 'alive' },
+    { type: 'bird', emoji: '🐦', quantity: 1, layer: 'sky', status: 'alive' },
+    { type: 'butterfly', emoji: '🦋', quantity: 2, layer: 'high', status: 'alive' },
+    { type: 'ant', emoji: '🐜', quantity: 4, layer: 'surface', status: 'alive' },
+  ];
+  // Trim entities to match diversity count
+  const visibleEntities = fakeEntities.slice(0, score.diversity + 2);
+
+  showGameOver({
+    day: 20,
+    season: 'winter',
+    entities: visibleEntities,
+    score: score,
+    environment: { temperature: -2, humidity: 4, sunlight: 3, fertility: 6 },
+    log: '[调试] 这是模拟的结算界面'
+  });
+
+  log('DEBUG', `Showing game-over preview with rating ${r}`);
 };

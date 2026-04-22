@@ -34,6 +34,9 @@
 11. 秋天落叶：秋天（Day 11-15），bush 和成熟植物每天 20% 概率掉落 fallen_leaf，自身不死亡
 12. 冬天休眠：冬天大部分植物进入 dormant 状态，停止生长但不死亡（除非冻死）
 13. 春天复苏：春天 dormant 植物自动恢复为 healthy，fallen_leaf 逐渐分解为 compost
+14. 草皮规则：grass_turf 放入后直接变为 grass（layer=low, status=healthy），无需发芽等待。草能稳定土壤（soil 流失速度 -50%），为草食动物提供食物
+15. 蘑菇孢子规则：mushroom_spore 放入后需要 humidity>=5 且 fertility>=3，满足条件 1-2 天长出 mushroom（layer=surface）。蘑菇会分解周围的 compost 和 fallen_leaf，每天将 0.3 单位有机物转化为 fertility。不满足条件则孢子 3 天后死亡
+16. 三叶草规则：clover_seed 放入后需要 soil>=1，1 天即可长成 clover（layer=low）。三叶草生命力极强：耐寒（可承受 -3℃）、耐旱（humidity>=1 即可存活）。每天固氮增加 fertility +0.1。三叶草存在时触发"幸运之瓶"成就
 
 ## 三、动物食物链规则
 14. 老鼠啃食：每只老鼠每天吃掉 0.5 单位植物（草/花/灌木均可）
@@ -89,7 +92,7 @@
 
 ## Emoji 图鉴（LLM 只能使用这些 type 和 emoji）
 基础材料: soil🟫, water💧, puddle🫧, stone🪨, branch🪵, ice🧊
-植物: seed🫘, sprout🌱, grass🌿, herb🍀, flower_seed🌸, flower_bud🌷, flower🌻, wilted_flower🥀, bush🌳, mushroom🍄, fallen_leaf🍂, maple_leaf🍁, clover☘️
+植物: seed🫘, sprout🌱, grass🌿, grass_turf🌿(放入即变grass), herb🍀, flower_seed🌸, flower_bud🌷, flower🌻, wilted_flower🥀, bush🌳, mushroom🍄, mushroom_spore🍄(孢子), fallen_leaf🍂, maple_leaf🍁, clover☘️, clover_seed☘️(三叶草种子)
 动物: earthworm🪱(underground), ant🐜(surface), snail🐌(low), ladybug🐞(low), butterfly🦋(high), dragonfly🪺(high), bee🐝(mid), cricket🦗(surface), frog🐸(low), mouse🐭(low), bird🐦(high), spider🕷️(mid), caterpillar🐛(low)
 天气: sun☀️, mild_sun🌤️, cloud☁️, rain🌧️, snow❄️, snowflake🌨️, rainbow🌈, star⭐, moon🌙, droplet💦
 衰败: dead_plant🥀, bone🦴, compost🟤, cobweb🕸️
