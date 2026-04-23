@@ -11,8 +11,8 @@ const CRISIS_TYPES = [
     seasons: ['spring'],
     probability: 0.40,
     condition: () => true,
-    description: '冷空气突然回流，气温骤降。temperature -6，嫩芽冻伤 quantity -50%，花苞冻落。',
-    prompt: '⚠️ 危机事件【倒春寒】：冷空气突然回流，温度骤降6℃，嫩芽(sprout)被冻伤 quantity 减半（向下取整，最少保留0.5），花苞(flower_bud)冻落。请在推演中体现倒春寒的破坏。'
+    description: '冷空气突然回流，气温骤降。temperature -8，所有植物 quantity -50%，花苞全部冻死。',
+    prompt: '⚠️ 危机事件【倒春寒】：冷空气猛烈回流，温度骤降8℃。所有植物（sprout、grass、herb、flower、bush等）quantity 减半（向下取整），花苞(flower_bud)全部冻死移除，嫩芽(sprout)直接死亡移除。这是毁灭性打击。请在推演中严格执行。'
   },
   {
     id: 'storm',
@@ -21,8 +21,8 @@ const CRISIS_TYPES = [
     seasons: ['spring', 'summer', 'autumn'],
     probability: 0.35,
     condition: () => true,
-    description: '瓢泼大雨冲刷瓶壁。humidity +4，蚂蚁和蚯蚓被冲走 quantity -50%。',
-    prompt: '⚠️ 危机事件【暴雨】：倾盆大雨灌入瓶中，湿度暴涨4点，蚂蚁和蚯蚓被水冲走 quantity 减半（向下取整，最少保留0.5）。请在推演中体现暴雨的冲击。'
+    description: '瓢泼大雨冲刷瓶壁。humidity +5，所有地面和低层动物 quantity -50%，土壤流失 fertility -2。',
+    prompt: '⚠️ 危机事件【暴雨】：倾盆大雨灌入瓶中，湿度暴涨5点。所有 surface 和 low 层的动物（蚂蚁、蚯蚓、蜗牛、蟋蟀、毛毛虫、瓢虫）quantity 减半（向下取整），土壤被冲刷 fertility -2。种子和蘑菇孢子被冲走移除。请在推演中严格执行。'
   },
   {
     id: 'drought',
@@ -31,8 +31,8 @@ const CRISIS_TYPES = [
     seasons: ['summer'],
     probability: 0.40,
     condition: (state) => state.environment.humidity >= 3,
-    description: '连日高温无雨，土地龟裂。humidity -3，所有植物 quantity -30%。',
-    prompt: '⚠️ 危机事件【干旱】：连续高温无降水，湿度骤降3点，所有植物因缺水 quantity 减少30%（向下取整，最少保留0.5）。请在推演中体现干旱对生态的破坏。'
+    description: '连日高温无雨，土地龟裂。humidity -4，所有植物 quantity -50%，蘑菇全部枯死。',
+    prompt: '⚠️ 危机事件【干旱】：持续极端高温无降水，湿度骤降4点。所有植物 quantity 减半（向下取整），蘑菇(mushroom)因完全脱水全部死亡移除，蜗牛因缺水死亡移除。请在推演中严格执行。'
   },
   {
     id: 'pest_outbreak',
@@ -47,8 +47,8 @@ const CRISIS_TYPES = [
         .reduce((sum, e) => sum + e.quantity, 0);
       return insectQty >= 3;
     },
-    description: '害虫大量繁殖，啃食植被。所有植物 quantity -40%，毛毛虫 +2。',
-    prompt: '⚠️ 危机事件【虫害爆发】：害虫大量繁殖侵袭植被，所有植物 quantity 减少40%（向下取整，最少保留0.5），毛毛虫数量 +2（如果没有毛毛虫则新增 caterpillar type）。请在推演中体现虫害的蔓延。'
+    description: '害虫大爆发，植被被啃食殆尽。所有植物 quantity -60%，毛毛虫 +3，花朵全部凋零。',
+    prompt: '⚠️ 危机事件【虫害爆发】：害虫大规模爆发侵袭所有植被，所有植物 quantity 减少60%（向下取整），毛毛虫数量 +3（如果没有毛毛虫则新增 caterpillar），所有花朵(flower)变为 wilted_flower。请在推演中严格执行。'
   },
   {
     id: 'cold_snap',
@@ -57,8 +57,8 @@ const CRISIS_TYPES = [
     seasons: ['autumn', 'winter'],
     probability: 0.45,
     condition: () => true,
-    description: '极地寒流来袭，气温骤降。temperature -8，不耐寒物种(蚂蚁、蜗牛、蝴蝶、蚊虫)直接死亡。',
-    prompt: '⚠️ 危机事件【寒潮】：极寒空气侵入，温度骤降8℃，蚂蚁、蜗牛、蝴蝶、蚊虫因无法耐受严寒全部死亡（quantity 归零移除）。花朵凋零变为 wilted_flower。请在推演中体现寒潮的致命打击。'
+    description: '极地寒流来袭，气温骤降。temperature -10，所有昆虫和冷血动物直接死亡，植物 quantity -30%。',
+    prompt: '⚠️ 危机事件【寒潮】：极寒空气猛烈侵入，温度骤降10℃。所有昆虫（蚂蚁、蝴蝶、蜜蜂、蚊虫、蟋蟀、毛毛虫、瓢虫、蜻蜓）和冷血动物（蜗牛、青蛙）全部死亡移除。所有植物 quantity -30%（向下取整）。花朵凋零变为 wilted_flower。请在推演中严格执行。'
   },
   {
     id: 'heat_wave',
@@ -67,8 +67,8 @@ const CRISIS_TYPES = [
     seasons: ['summer'],
     probability: 0.35,
     condition: () => true,
-    description: '酷暑难耐，水分蒸发。temperature +8，humidity -2，嫩芽和蘑菇 quantity -50%。',
-    prompt: '⚠️ 危机事件【热浪】：极端高温侵袭，温度飙升8℃，湿度下降2点，嫩芽(sprout)和蘑菇(mushroom)被灼伤 quantity 减半。请在推演中体现高温的破坏。'
+    description: '酷暑难耐，水分蒸发。temperature +10，humidity -3，所有植物 quantity -40%，嫩芽和蘑菇全灭。',
+    prompt: '⚠️ 危机事件【热浪】：极端高温侵袭，温度飙升10℃，湿度下降3点。所有植物 quantity -40%（向下取整），嫩芽(sprout)和蘑菇(mushroom)因灼烧全部死亡移除。蚯蚓钻入深层（quantity -50%）。请在推演中严格执行。'
   },
   {
     id: 'plague',
@@ -84,8 +84,8 @@ const CRISIS_TYPES = [
         .reduce((sum, e) => sum + e.quantity, 0);
       return totalAnimals >= 6;
     },
-    description: '神秘疾病蔓延。随机 2 种动物 quantity -50%。',
-    prompt: '⚠️ 危机事件【瘟疫】：一种神秘的疾病在瓶中蔓延，随机选择2种动物，它们的 quantity 减少50%（向下取整，最少保留0.5）。请在推演中体现瘟疫的扩散和动物的衰弱。'
+    description: '致命瘟疫蔓延。随机 3 种动物全部死亡，其余动物 quantity -30%。',
+    prompt: '⚠️ 危机事件【瘟疫】：一种致命的传染病在瓶中爆发蔓延，随机选择3种动物全部死亡移除（quantity 归零），其余所有动物 quantity -30%（向下取整）。请在推演中严格执行。'
   }
 ];
 

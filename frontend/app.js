@@ -56,6 +56,46 @@ function initWS() {
   ws.onerror = (err) => log('WS', `Error: ${err.message || err}`);
 }
 
+// --- Diversity indicator (real-time preview of final biodiversity score) ---
+function updateDiversityIndicator(entities) {
+  const excluded = ['soil', 'water', 'puddle', 'stone', 'branch', 'ice',
+    'fallen_leaf', 'maple_leaf', 'compost', 'bone', 'cobweb',
+    'dead_plant', 'sun', 'mild_sun', 'cloud', 'rain', 'snow',
+    'snowflake', 'rainbow', 'star', 'moon', 'droplet'];
+  const alive = entities.filter(e => e.status !== 'dead' && e.quantity > 0 && !excluded.includes(e.type));
+  const uniqueCount = new Set(alive.map(e => e.type)).size;
+
+  // Same tiers as scorer.js
+  let scorePreview, tier;
+  if (uniqueCount >= 15) { scorePreview = 40; tier = 'gold'; }
+  else if (uniqueCount >= 12) { scorePreview = 30; tier = 'green'; }
+  else if (uniqueCount >= 8) { scorePreview = 20; tier = 'yellow'; }
+  else if (uniqueCount >= 4) { scorePreview = 10; tier = 'red'; }
+  else if (uniqueCount >= 1) { scorePreview = 5; tier = 'red'; }
+  else { scorePreview = 0; tier = 'gray'; }
+
+  document.getElementById('diversity-count').textContent = uniqueCount;
+  const previewEl = document.getElementById('diversity-score-preview');
+  previewEl.textContent = `(${scorePreview}/40分)`;
+  // 整个指标变色
+  const indicator = document.getElementById('diversity-indicator');
+  indicator.className = `diversity-tier-${tier}`;
+
+  // Next tier hint
+  let nextHint = '';
+  if (uniqueCount < 4) nextHint = `再增加 ${4 - uniqueCount} 种可提升至10分`;
+  else if (uniqueCount < 8) nextHint = `再增加 ${8 - uniqueCount} 种可提升至20分`;
+  else if (uniqueCount < 12) nextHint = `再增加 ${12 - uniqueCount} 种可提升至30分`;
+  else if (uniqueCount < 15) nextHint = `再增加 ${15 - uniqueCount} 种可提升至满分40分`;
+  else nextHint = '已达满分！';
+
+  indicator.title = `物种丰富度：当前 ${uniqueCount} 种存活物种\n` +
+    `对应结算「生物多样性」评分：${scorePreview}/40分\n` +
+    `${nextHint}\n` +
+    `─────────\n` +
+    `存活物种：${alive.map(e => e.emoji).join(' ') || '无'}`;
+}
+
 // --- Handle day result ---
 function handleDayResult(data) {
   log('UI', `Updating UI for day ${data.day}`);
@@ -76,6 +116,9 @@ function handleDayResult(data) {
   log('RENDER', `Drawing ${entities.length} entity types on canvas` + (data.crisis ? ` [CRISIS: ${data.crisis.name}]` : ''));
   renderer.renderWithTransition(entities);
 
+  // Update diversity indicator (matches scorer.js logic exactly)
+  updateDiversityIndicator(entities);
+
   // Update log panel
     if (data.log) {
     let html;
@@ -92,9 +135,12 @@ function handleDayResult(data) {
       }
 
       if (data.events && data.events.length > 0) {
-        const eventText = data.events.map(ev => ev.description || ev.type).join('<br>');
+        const eventText = data.events.map(ev => {
+          if (typeof ev === 'string') return ev;
+          return ev.description || ev.text || ev.msg || ev.event || ev.type || JSON.stringify(ev);
+        }).join('<br>');
         html += `<div class="log-events">${eventText}</div>`;
-        log('EVENTS', data.events.map(ev => ev.description || ev.type).join(', '));
+        log('EVENTS', eventText.replace(/<br>/g, ', '));
       }
     }
     appendLog(html);

@@ -10,19 +10,24 @@ class TerrariumRenderer {
 
     // Canvas hover tooltip
     this.canvas.addEventListener('mousemove', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      // 用 offsetX/offsetY 获取 canvas 内坐标，再乘缩放比修正
+      const scaleX = this.canvas.width / this.canvas.offsetWidth;
+      const scaleY = this.canvas.height / this.canvas.offsetHeight;
+      const mx = e.offsetX * scaleX;
+      const my = e.offsetY * scaleY;
 
       let found = null;
       for (const item of this.drawnItems) {
         if (item.hitTest) {
-          // 矩形区域检测（土壤/水背景层）
           if (item.hitTest(mx, my)) { found = item; break; }
         } else {
-          const dx = mx - item.x;
-          const dy = my - item.y;
-          if (dx * dx + dy * dy < 18 * 18) { found = item; break; }
+          // 矩形碰撞检测，覆盖整个格子区域
+          const hw = (item.hw || 20);
+          const hh = (item.hh || 20);
+          if (mx >= item.x - hw && mx <= item.x + hw &&
+              my >= item.y - hh && my <= item.y + hh) {
+            found = item; break;
+          }
         }
       }
 
@@ -306,6 +311,13 @@ class TerrariumRenderer {
 
         ctx.fillText(item.emoji, x, y);
 
+        // 用 measureText 获取 emoji 的实际渲染边界
+        const m = ctx.measureText(item.emoji);
+        const bboxLeft = x - (m.actualBoundingBoxLeft || cellW / 2);
+        const bboxRight = x + (m.actualBoundingBoxRight || cellW / 2);
+        const bboxTop = y - (m.actualBoundingBoxAscent || cellH / 2);
+        const bboxBottom = y + (m.actualBoundingBoxDescent || cellH / 2);
+
         // 数量角标（只在第一个 emoji 上显示，且数量 > 1）
         if (item.total > 1 && !item._badgeDrawn) {
           ctx.save();
@@ -324,7 +336,10 @@ class TerrariumRenderer {
           items.forEach(it => { if (it.type === item.type) it._badgeDrawn = true; });
         }
 
-        this.drawnItems.push({ x, y, type: item.type, emoji: item.emoji });
+        this.drawnItems.push({
+          x, y, type: item.type, emoji: item.emoji,
+          hitTest: (mx, my) => mx >= bboxLeft && mx <= bboxRight && my >= bboxTop && my <= bboxBottom
+        });
       });
     }
 

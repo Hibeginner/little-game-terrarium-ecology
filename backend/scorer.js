@@ -5,10 +5,11 @@ function calculateScore(finalState) {
   // 1. Biodiversity (max 40)
   const uniqueSpecies = new Set(aliveEntities.map(e => e.type)).size;
   let diversity = 0;
-  if (uniqueSpecies >= 10) diversity = 40;
-  else if (uniqueSpecies >= 7) diversity = 30;
-  else if (uniqueSpecies >= 4) diversity = 20;
-  else if (uniqueSpecies >= 1) diversity = 10;
+  if (uniqueSpecies >= 15) diversity = 40;
+  else if (uniqueSpecies >= 12) diversity = 30;
+  else if (uniqueSpecies >= 8) diversity = 20;
+  else if (uniqueSpecies >= 4) diversity = 10;
+  else if (uniqueSpecies >= 1) diversity = 5;
   
   // 2. Ecological balance (max 30)
   let balance = 0;
